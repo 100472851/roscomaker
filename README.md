@@ -6,6 +6,8 @@
 
 RoscoMaker builds "rosco" rounds, the alphabet-wheel game from Spanish TV quiz shows: one clue per letter, the answer starts with (or contains) that letter, and you go round the wheel until every letter is answered. You give it a photo of your event poster and it builds the theme from its colours, you write the clues, and you get a single HTML file that runs on any laptop plugged into a projector, with no server and no internet.
 
+Try it in the browser: [100472851.github.io/roscomaker](https://100472851.github.io/roscomaker/). The two example wheels (cinema and science) are already in the library.
+
 ## Why
 
 I first wrote a one-off rosco for a youth group event: two wheels, 54 clues, a projector and a host reading them out. Three things went wrong while preparing it, and each one became a feature here:
