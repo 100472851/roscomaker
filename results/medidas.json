@@ -3,10 +3,12 @@
   "bien_escritas_aceptadas_pct": 100,
   "una_errata_aceptadas_pct": 100,
   "una_errata_intentos": 860,
+  "una_errata_levenshtein_clasico_pct": 86,
   "cortas_con_errata_aceptadas_pct": 3.6,
   "respuestas_de_otra_letra_aceptadas_pct": 0,
   "respuestas_de_otra_letra": 1404,
   "fotos_sinteticas": 500,
   "fotos_con_colores_legibles_pct": 100,
-  "tamano_html_kb": 309
+  "tamano_html_kb": 309,
+  "caracteres_enlace_rosco_cine": 2264
 }

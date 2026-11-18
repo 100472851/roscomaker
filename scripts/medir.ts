@@ -2,7 +2,8 @@
 // Uso: npm run medir   (las cifras del README salen de aquí; no se escriben a mano)
 
 import { existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs';
-import { esCorrecta, normalizar } from '../src/corrector.ts';
+import { codificar } from '../src/compartir.ts';
+import { esCorrecta, normalizar, tolerancia, variantes } from '../src/corrector.ts';
 import { EJEMPLOS } from '../src/ejemplos.ts';
 import { agrupar, contraste, deHex, repartir, type RGB } from '../src/paleta.ts';
 
@@ -39,12 +40,28 @@ for (const p of preguntas) {
 
 const largas = preguntas.filter(p => normalizar(p.respuestas[0]).replace(/ /g, '').length >= 5);
 const INTENTOS = 20;
+semilla = 20261121;
 let unaErrata = 0;
 for (const p of largas) for (let k = 0; k < INTENTOS; k++) if (esCorrecta(errata(sinTilde(p.respuestas[0]).toLowerCase()), p.respuestas)) unaErrata++;
 
 const cortas = preguntas.filter(p => normalizar(p.respuestas[0]).replace(/ /g, '').length <= 4);
 let cortasConErrata = 0;
 for (const p of cortas) for (let k = 0; k < INTENTOS; k++) if (esCorrecta(errata(sinTilde(p.respuestas[0]).toLowerCase()), p.respuestas)) cortasConErrata++;
+
+// Comparación: el mismo corrector con Levenshtein clásico (intercambiar dos letras cuenta dos), como en la primera versión.
+function levenshtein(a: string, b: string): number {
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[b.length];
+}
+const esCorrectaClasica = (x: string, rs: string[]) => rs.some(r => variantes(r).some(v => variantes(x).some(e => levenshtein(e, v) <= tolerancia(v.length))));
+semilla = 20261121;
+let unaErrataClasica = 0;
+for (const p of largas) for (let k = 0; k < INTENTOS; k++) if (esCorrectaClasica(errata(sinTilde(p.respuestas[0]).toLowerCase()), p.respuestas)) unaErrataClasica++;
 
 // Respuestas equivocadas de verdad: la respuesta de otra letra del mismo rosco.
 let falsasAceptadas = 0, falsas = 0;
@@ -72,6 +89,7 @@ for (let f = 0; f < FOTOS; f++) {
   if (ok) legibles++;
 }
 
+const enlace = (await codificar(EJEMPLOS[0])).length;
 const tam = existsSync('dist/index.html') ? Math.round(statSync('dist/index.html').size / 1024) : null;
 
 const m = {
@@ -79,27 +97,31 @@ const m = {
   bien_escritas_aceptadas_pct: pct(bienEscritas, preguntas.length * 4),
   una_errata_aceptadas_pct: pct(unaErrata, largas.length * INTENTOS),
   una_errata_intentos: largas.length * INTENTOS,
+  una_errata_levenshtein_clasico_pct: pct(unaErrataClasica, largas.length * INTENTOS),
   cortas_con_errata_aceptadas_pct: pct(cortasConErrata, cortas.length * INTENTOS),
   respuestas_de_otra_letra_aceptadas_pct: pct(falsasAceptadas, falsas),
   respuestas_de_otra_letra: falsas,
   fotos_sinteticas: FOTOS,
   fotos_con_colores_legibles_pct: pct(legibles, FOTOS),
   tamano_html_kb: tam,
+  caracteres_enlace_rosco_cine: enlace,
 };
 
 mkdirSync('results', { recursive: true });
 writeFileSync('results/medidas.json', JSON.stringify(m, null, 2) + '\n');
 writeFileSync('results/medidas.md', `# Medidas
 
-Generado con \`npm run medir\` sobre los ${m.respuestas} respuestas de los roscos de ejemplo. Semilla fija: siempre salen las mismas cifras.
+Generado con \`npm run medir\` sobre las ${m.respuestas} respuestas de los roscos de ejemplo. Semilla fija: siempre salen las mismas cifras.
 
 | Qué se mide | Resultado |
 | --- | --- |
 | Respuestas bien escritas aceptadas (tal cual, minúsculas, mayúsculas y sin tildes) | ${m.bien_escritas_aceptadas_pct} % |
 | Respuestas de 5 letras o más con una errata aceptadas sin preguntar (${m.una_errata_intentos} intentos) | ${m.una_errata_aceptadas_pct} % |
+| Lo mismo con Levenshtein clásico (intercambiar dos letras cuenta como dos erratas) | ${m.una_errata_levenshtein_clasico_pct} % |
 | Respuestas de 4 letras o menos con una errata aceptadas sin preguntar | ${m.cortas_con_errata_aceptadas_pct} % (a propósito: en palabras cortas una errata cambia la palabra) |
 | Respuestas de otra letra del mismo rosco aceptadas por error (${m.respuestas_de_otra_letra} pares) | ${m.respuestas_de_otra_letra_aceptadas_pct} % |
 | Fotos sintéticas aleatorias cuyo reparto de colores cumple los contrastes mínimos (${m.fotos_sinteticas} fotos) | ${m.fotos_con_colores_legibles_pct} % |
+| Largo del código del enlace para compartir el rosco de cine (27 letras, sin foto) | ${m.caracteres_enlace_rosco_cine} caracteres |
 | Tamaño de la app compilada (un solo HTML con tipografías) | ${m.tamano_html_kb ?? '—'} KB |
 
 Lo que el corrector no acepta no se da por malo: la partida pregunta «¿Es válida?» a quien presenta.
