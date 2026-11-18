@@ -28,6 +28,19 @@ describe('repartir', () => {
     expect(contraste(deHex(p.ficha), blanco)).toBeGreaterThanOrEqual(7);
     expect(contraste(deHex(p.resalte), deHex(p.acento))).toBeGreaterThanOrEqual(3);
   });
+  it('con cualquier foto, los papeles cumplen los contrastes mínimos', () => {
+    let semilla = 7;
+    const azar = () => { semilla = (semilla * 1664525 + 1013904223) >>> 0; return semilla / 2 ** 32; };
+    const blanco: RGB = [255, 255, 255];
+    for (let f = 0; f < 200; f++) {
+      const bloques: [RGB, number][] = Array.from({ length: 2 + Math.floor(azar() * 4) }, () => [[azar() * 255, azar() * 255, azar() * 255].map(Math.round) as RGB, 100 + Math.floor(azar() * 300)]);
+      const p = repartir(agrupar(imagen(bloques), 6));
+      expect(contraste(deHex(p.fondo), blanco)).toBeGreaterThanOrEqual(4.5);
+      expect(contraste(deHex(p.acento), blanco)).toBeGreaterThanOrEqual(3);
+      expect(contraste(deHex(p.ficha), blanco)).toBeGreaterThanOrEqual(4.5);
+      expect(contraste(deHex(p.resalte), deHex(p.acento))).toBeGreaterThanOrEqual(3);
+    }
+  });
   it('con una foto en blanco y negro se inventa un acento con color', () => {
     const p = repartir(agrupar(imagen([[[10, 10, 10], 500], [[200, 200, 200], 500]]), 2));
     expect(p.acento).not.toMatch(/^#(\w\w)\1\1$/);

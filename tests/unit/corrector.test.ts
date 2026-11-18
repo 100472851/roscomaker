@@ -18,6 +18,7 @@ describe('distancia', () => {
     expect(distancia('gato', 'pato')).toBe(1);
     expect(distancia('', 'abc')).toBe(3);
     expect(distancia('kitten', 'sitting')).toBe(3);
+    expect(distancia('cmaino', 'camino')).toBe(1); // dos letras seguidas intercambiadas cuentan una
   });
 });
 
@@ -30,6 +31,8 @@ describe('esCorrecta', () => {
     expect(esCorrecta('betsave', ['Betsabé'])).toBe(true);
     expect(esCorrecta('rot', ['Rut'])).toBe(false);
     expect(esCorrecta('up', ['Up'])).toBe(true);
+    expect(esCorrecta('fragon', ['Fargo'])).toBe(false);
+    expect(esCorrecta('fagro', ['Fargo'])).toBe(true);
   });
   it('acepta respuestas alternativas y sin artículo', () => {
     expect(esCorrecta('parasite', ['Parásitos', 'Parasite'])).toBe(true);

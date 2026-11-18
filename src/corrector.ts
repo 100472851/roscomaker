@@ -21,17 +21,23 @@ export function variantes(s: string): string[] {
   return [...new Set([n, n.replace(ARTICULO, '')].map(x => x.replace(/ /g, '')))].filter(Boolean);
 }
 
-/** Distancia de edición (Levenshtein) entre dos cadenas. */
+/**
+ * Distancia de edición entre dos cadenas (Damerau–Levenshtein restringida): cambiar, quitar o meter una letra
+ * cuenta uno, y también intercambiar dos letras seguidas («cmaino» por «camino»), la errata más típica al teclear deprisa.
+ */
 export function distancia(a: string, b: string): number {
   if (a === b) return 0;
   if (!a.length) return b.length;
   if (!b.length) return a.length;
+  let antes: number[] = [];
   let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
   for (let i = 1; i <= a.length; i++) {
     const cur = [i];
     for (let j = 1; j <= b.length; j++) {
       cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) cur[j] = Math.min(cur[j], antes[j - 2] + 1);
     }
+    antes = prev;
     prev = cur;
   }
   return prev[b.length];

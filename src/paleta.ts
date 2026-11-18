@@ -116,20 +116,22 @@ export function repartir(cumulos: Cumulo[]): Papeles {
     .sort((a, b) => (b.s * (1 - Math.abs(b.l - 0.5) * 1.4) * b.peso ** 0.25) - (a.s * (1 - Math.abs(a.l - 0.5) * 1.4) * a.peso ** 0.25))[0];
   let acento = acentoC.color;
   if (acentoC.s < 0.25) acento = deHsl(acentoC.h, 0.75, 0.5); // foto apagada: se aviva el tono
-  acento = oscurecerHasta(acento, 3);
+  acento = oscurecerHasta(acento, 3.2); // un poco de margen: al redondear a hexadecimal se pierde algo
   const hAcento = aHsl(acento)[0];
 
   // Fichas: un tono distinto del acento, oscuro para que la letra blanca se lea.
   const otros = info.filter(c => c !== acentoC && c !== fondoC && c.s > 0.12 && distanciaTono(c.h, hAcento) > 40);
   const fichaBase = otros.length ? otros.sort((a, b) => b.peso - a.peso)[0].color : deHsl(hAcento + 200, 0.5, 0.3);
   const [hf, sf] = aHsl(fichaBase);
-  const ficha = oscurecerHasta(deHsl(hf, Math.max(sf, 0.35), Math.min(aHsl(fichaBase)[2], 0.32)), 7);
+  const ficha = oscurecerHasta(deHsl(hf, Math.max(sf, 0.35), Math.min(aHsl(fichaBase)[2], 0.32)), 7.2);
 
   // Resalte: claro y con un toque de color; se usa de fondo de botones con el acento como texto.
   const claro = [...info].sort((a, b) => b.lum - a.lum)[0];
   const hr = claro.s > 0.15 ? claro.h : hAcento + 90;
   let resalte = deHsl(hr, 0.75, 0.86);
   if (contraste(resalte, acento) < 3) resalte = deHsl(hr, 0.6, 0.93);
+  // Si aun así el acento no se lee encima del resalte, se oscurece el acento (y gana contraste con el blanco).
+  for (let t = 0.04; contraste(resalte, acento) < 3.2 && t <= 1; t += 0.04) acento = mezclar(acento, NEGRO, 0.08);
 
   return { fondo: aHex(fondo), acento: aHex(acento), ficha: aHex(ficha), resalte: aHex(resalte) };
 }
